@@ -9,6 +9,8 @@ import { LocalStrategy } from './local.strategy';
 import * as fs from 'fs';
 import * as jose from 'node-jose';
 
+export const keyFileName = 'keys.json';
+
 @Module({
   imports: [
     UsersModule,
@@ -21,7 +23,7 @@ import * as jose from 'node-jose';
         await keyStore.generate('RSA', 2048, { alg: 'RS256', use: 'sig' });
 
         fs.writeFileSync(
-          'Keys.json',
+          keyFileName,
           JSON.stringify(keyStore.toJSON(true), null, '  '),
         );
 
