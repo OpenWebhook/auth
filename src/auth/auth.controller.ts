@@ -4,7 +4,7 @@ import * as jose from 'node-jose';
 import * as fs from 'fs';
 import { keyFileName } from './auth.module';
 
-@Controller('/auth')
+@Controller()
 export class AuthController {
   @Get('.well-known/jwks.json')
   async getJWKeys(@Res() res: Response) {
