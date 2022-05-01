@@ -5,7 +5,7 @@ import * as fs from 'fs';
 
 @Controller('/auth')
 export class AuthController {
-  @Get('/jwks')
+  @Get('.well-known/jwks.json')
   async getJWKeys(@Res() res: Response) {
     const ks = fs.readFileSync('keys.json');
 
