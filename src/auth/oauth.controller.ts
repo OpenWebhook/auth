@@ -6,6 +6,7 @@ import authConfig from '../config/auth.config';
 
 console.log('http://localhost:9000/oauth/login');
 
+// @TODO: Use passportjs instead of implementing manually
 @Controller('oauth')
 export class OAuthController {
   private authConfig: ConfigType<typeof authConfig>;
