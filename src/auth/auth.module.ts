@@ -9,6 +9,7 @@ import { LocalStrategy } from './local.strategy';
 import * as fs from 'fs';
 import * as jose from 'node-jose';
 import { OAuthController } from './oauth.controller';
+import { HttpModule } from '@nestjs/axios';
 
 export const keyFileName = 'keys.json';
 
@@ -17,8 +18,8 @@ export const keyFileName = 'keys.json';
     UsersModule,
     PassportModule,
     ConfigModule,
+    HttpModule,
     JwtModule.registerAsync({
-      imports: [ConfigModule],
       useFactory: async (): Promise<JwtModuleOptions> => {
         const keyStore = jose.JWK.createKeyStore();
         await keyStore.generate('RSA', 2048, { alg: 'RS256', use: 'sig' });
@@ -39,7 +40,6 @@ export const keyFileName = 'keys.json';
           },
         };
       },
-      inject: [ConfigService],
     }),
   ],
   providers: [AuthService, LocalStrategy],
