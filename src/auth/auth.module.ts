@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { LocalStrategy } from './local.strategy';
 import * as fs from 'fs';
 import * as jose from 'node-jose';
+import { OAuthController } from './oauth.controller';
 
 export const keyFileName = 'keys.json';
 
@@ -43,6 +44,6 @@ export const keyFileName = 'keys.json';
   ],
   providers: [AuthService, LocalStrategy],
   exports: [AuthService],
-  controllers: [AuthController],
+  controllers: [AuthController, OAuthController],
 })
 export class AuthModule {}
