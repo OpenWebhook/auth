@@ -2,7 +2,9 @@ import { HttpService } from '@nestjs/axios';
 import { Controller, Get, Query, Res } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { Response } from 'express';
+import { UsersService } from 'src/users/users.service';
 import authConfig from '../config/auth.config';
+import { AuthService } from './auth.service';
 
 console.log('http://localhost:9000/oauth/login');
 
@@ -13,6 +15,8 @@ export class OAuthController {
   constructor(
     configService: ConfigService,
     private readonly httpService: HttpService,
+    private readonly usersService: UsersService,
+    private readonly authService: AuthService,
   ) {
     this.authConfig = configService.get('auth');
   }
@@ -54,12 +58,17 @@ export class OAuthController {
               Authorization: `token ${accessToken}`,
             },
           })
-          .subscribe((result) => {
+          .subscribe(async (result) => {
             console.log(result.data.email);
+            const user = await this.usersService.findOrCreateUser(
+              result.data.email,
+            );
+            const { access_token } = await this.authService.login(user);
             // // Find or Create user
             // // Add store from req.state to user
             // // redirect user to store with token set
-            return res.sendStatus(200);
+            res.cookie('access_token', access_token);
+            return res.redirect('https://coucou.webhook.store/');
           });
       });
   }
