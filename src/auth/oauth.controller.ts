@@ -6,8 +6,6 @@ import { UsersService } from 'src/users/users.service';
 import authConfig from '../config/auth.config';
 import { AuthService } from './auth.service';
 
-console.log('http://localhost:9000/oauth/login');
-
 // @TODO: Use passportjs instead of implementing manually
 @Controller('oauth')
 export class OAuthController {
@@ -23,7 +21,6 @@ export class OAuthController {
 
   @Get('login')
   login(@Res() res: Response) {
-    // @TODO: add redirect_uri and state
     const url = `https://github.com/login/oauth/authorize?scope=user:email&client_id=${this.authConfig.githubOauth.clientId}`;
     return res.redirect(url);
   }
@@ -49,24 +46,21 @@ export class OAuthController {
         },
       )
       .subscribe((result) => {
-        const accessToken = result.data.access_token;
+        const githubAccessToken = result.data.access_token;
 
         // @TODO: Those observable should not be nested
         this.httpService
           .get('https://api.github.com/user', {
             headers: {
-              Authorization: `token ${accessToken}`,
+              Authorization: `token ${githubAccessToken}`,
             },
           })
           .subscribe(async (result) => {
-            console.log(result.data.email);
             const user = await this.usersService.findOrCreateUser(
               result.data.email,
             );
             const { access_token } = await this.authService.login(user);
-            // // Find or Create user
-            // // Add store from req.state to user
-            // // redirect user to store with token set
+            // @TODO return to the right webhook.store domain
             return res.redirect(
               `https://coucou.webhook.store?access_token=${access_token}`,
             );
