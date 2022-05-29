@@ -1,7 +1,7 @@
 import { HttpService } from '@nestjs/axios';
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Controller, Get, Query, Req, Res } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { UsersService } from 'src/users/users.service';
 import authConfig from '../config/auth.config';
 import { AuthService } from './auth.service';
@@ -20,13 +20,19 @@ export class OAuthController {
   }
 
   @Get('login')
-  login(@Res() res: Response) {
-    const url = `https://github.com/login/oauth/authorize?scope=user:email&client_id=${this.authConfig.githubOauth.clientId}`;
+  login(@Res() res: Response, @Req() req: Request) {
+    const state = encodeURIComponent(req.hostname);
+    const url = `https://github.com/login/oauth/authorize?scope=user:email&client_id=${this.authConfig.githubOauth.clientId}&state=${state}`;
     return res.redirect(url);
   }
 
   @Get('callback')
-  async callback(@Res() res: Response, @Query('code') code) {
+  async callback(
+    @Res() res: Response,
+    @Query('code') code,
+    @Query('state') state,
+  ) {
+    const redirectDomain = decodeURI(state);
     this.httpService
       .post<{
         access_token: string;
@@ -62,7 +68,7 @@ export class OAuthController {
             const { access_token } = await this.authService.login(user);
             // @TODO return to the right webhook.store domain
             return res.redirect(
-              `https://coucou.webhook.store?access_token=${access_token}`,
+              `https://${redirectDomain}?access_token=${access_token}`,
             );
           });
       });
