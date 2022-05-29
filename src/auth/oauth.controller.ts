@@ -67,8 +67,9 @@ export class OAuthController {
             // // Find or Create user
             // // Add store from req.state to user
             // // redirect user to store with token set
-            res.cookie('access_token', access_token);
-            return res.redirect('https://coucou.webhook.store/');
+            return res.redirect(
+              `https://coucou.webhook.store?access_token=${access_token}`,
+            );
           });
       });
   }
