@@ -11,6 +11,7 @@ import {
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { Response } from 'express';
 import { UsersService } from 'src/users/users.service';
+import { isValidHttpUrl } from 'src/utils/is-valid-url';
 import authConfig from '../config/auth.config';
 import { AuthService } from './auth.service';
 
@@ -41,13 +42,16 @@ export class OAuthController {
     @Query('code') code: string | undefined,
     @Query('state') state: string | undefined,
   ) {
-    if (!state) {
-      return next(new ForbiddenException('No state provided'));
-    }
     if (!code) {
       return next(new ForbiddenException('No code provided'));
     }
+    if (!state) {
+      return next(new ForbiddenException('No state provided'));
+    }
     const redirectDomain = decodeURI(state);
+    if (!isValidHttpUrl(redirectDomain)) {
+      return next(new ForbiddenException('Invalid state'));
+    }
     this.httpService
       .post<{
         access_token: string;
@@ -77,11 +81,12 @@ export class OAuthController {
             },
           })
           .subscribe(async (result) => {
-            const user = await this.usersService.findOrCreateUser(
-              result.data.email,
-            );
+            const user = await this.usersService.findOrCreateUser({
+              email: result.data.email,
+              picture: result.data.avatar_url,
+              name: result.data.login,
+            });
             const { access_token } = await this.authService.login(user);
-            // @TODO return to the right webhook.store domain
             return res.redirect(
               `${redirectDomain}?access_token=${access_token}`,
             );
