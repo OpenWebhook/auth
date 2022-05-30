@@ -1,7 +1,15 @@
 import { HttpService } from '@nestjs/axios';
-import { Controller, Get, Query, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  Headers,
+  Next,
+  Query,
+  Res,
+} from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { UsersService } from 'src/users/users.service';
 import authConfig from '../config/auth.config';
 import { AuthService } from './auth.service';
@@ -20,8 +28,8 @@ export class OAuthController {
   }
 
   @Get('login')
-  login(@Res() res: Response, @Req() req: Request) {
-    const state = encodeURIComponent(req.hostname);
+  login(@Res() res: Response, @Headers('referer') referer: string) {
+    const state = encodeURIComponent(referer);
     const url = `https://github.com/login/oauth/authorize?scope=user:email&client_id=${this.authConfig.githubOauth.clientId}&state=${state}`;
     return res.redirect(url);
   }
@@ -29,9 +37,16 @@ export class OAuthController {
   @Get('callback')
   async callback(
     @Res() res: Response,
-    @Query('code') code,
-    @Query('state') state,
+    @Next() next: any,
+    @Query('code') code: string | undefined,
+    @Query('state') state: string | undefined,
   ) {
+    if (!state) {
+      return next(new ForbiddenException('No state provided'));
+    }
+    if (!code) {
+      return next(new ForbiddenException('No code provided'));
+    }
     const redirectDomain = decodeURI(state);
     this.httpService
       .post<{
@@ -68,7 +83,7 @@ export class OAuthController {
             const { access_token } = await this.authService.login(user);
             // @TODO return to the right webhook.store domain
             return res.redirect(
-              `https://${redirectDomain}?access_token=${access_token}`,
+              `${redirectDomain}?access_token=${access_token}`,
             );
           });
       });
