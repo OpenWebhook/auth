@@ -16,3 +16,8 @@ model User {
   name    String
   picture String
 }
+
+model Host {
+  id     String @id
+  domain String @unique
+}
