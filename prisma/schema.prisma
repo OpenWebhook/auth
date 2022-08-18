@@ -11,11 +11,23 @@ datasource db {
 }
 
 model User {
-  email   String @id
+  email   String     @id
   name    String
   picture String
+  Hosts   HostUser[]
 }
 
 model Host {
-  domain String @id
+  domain String     @id
+  Users  HostUser[]
+}
+
+model HostUser {
+  user       User     @relation(fields: [userEmail], references: [email])
+  userEmail  String // relation scalar field (used in the `@relation` attribute above)
+  host       Host     @relation(fields: [hostDomain], references: [domain])
+  hostDomain String // relation scalar field (used in the `@relation` attribute above)
+  assignedAt DateTime @default(now())
+
+  @@id([userEmail, hostDomain])
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { HostService } from './host.service';
 
 @Controller('/hosts')
@@ -10,9 +10,8 @@ export class HostController {
   }
 
   @Post()
-  createHost(): any {
-    return this.hostService.createHostRule({
-      domain: 'croute.com',
-    });
+  allowUserOnHost(@Body() body: any): any {
+    const { domain, userEmail } = body;
+    return this.hostService.findOrCreateHostUser(domain, userEmail);
   }
 }
