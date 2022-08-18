@@ -5,7 +5,6 @@ import { PassportModule } from '@nestjs/passport';
 import { UsersModule } from 'src/users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { LocalStrategy } from './local.strategy';
 import * as fs from 'fs';
 import * as jose from 'node-jose';
 import { OAuthController } from './oauth.controller';
@@ -42,7 +41,7 @@ export const keyFileName = 'keys.json';
       },
     }),
   ],
-  providers: [AuthService, LocalStrategy],
+  providers: [AuthService],
   exports: [AuthService],
   controllers: [AuthController, OAuthController],
 })
