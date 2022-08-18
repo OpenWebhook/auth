@@ -22,9 +22,8 @@ export class UsersService {
     if (storedUser) {
       return storedUser;
     }
-    const id = `us-${uuidv4()}`;
     const createdUser = await this.prismaService.user.create({
-      data: { ...user, id },
+      data: { ...user },
     });
     return createdUser;
   }

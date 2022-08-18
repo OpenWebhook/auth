@@ -13,7 +13,6 @@ export class HostController {
   createHost(): any {
     return this.hostService.createHostRule({
       domain: 'croute.com',
-      id: 'croute',
     });
   }
 }

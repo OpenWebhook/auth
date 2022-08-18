@@ -13,10 +13,9 @@ export class AuthService {
     const storedUser = await this.usersService.findOrCreateUser(user);
     const payload = {
       email: user.email,
-      sub: user.email,
+      sub: storedUser.email,
       picture: user.picture,
       name: user.name,
-      id: storedUser.id,
     };
     return {
       access_token: this.jwtService.sign(payload),
