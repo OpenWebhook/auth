@@ -1,9 +1,9 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Post,
   Res,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -20,7 +20,7 @@ export class WebhookStoreAuthController {
     @Res() res: Response,
   ) {
     if (!webhookStoreUrl.endsWith('.webhook.store')) {
-      throw new UnauthorizedException('This webhook store is not public');
+      throw new ForbiddenException('This webhook store is not public');
     }
     const token = await this.authService.getAccessToken(
       { canRead: true },
@@ -36,7 +36,7 @@ export class WebhookStoreAuthController {
     @Res() res: Response,
   ) {
     if (!webhookStoreUrl.endsWith('.webhook.store')) {
-      throw new UnauthorizedException('This webhook store is not public');
+      throw new ForbiddenException('This webhook store is not public');
     }
     const token = await this.authService.getAccessToken(
       { canRead: true },
