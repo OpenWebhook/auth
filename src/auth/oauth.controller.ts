@@ -13,7 +13,6 @@ import { Response } from 'express';
 import { UsersService } from 'src/users/users.service';
 import { isValidHttpUrl } from 'src/utils/is-valid-url';
 import authConfig from '../config/auth.config';
-import { HostService } from '../host/host.service';
 import { AuthService } from './auth.service';
 
 // @TODO: Use passportjs instead of implementing manually
@@ -24,7 +23,6 @@ export class OAuthController {
     configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly usersService: UsersService,
-    private readonly hostService: HostService,
     private readonly authService: AuthService,
   ) {
     this.authConfig = configService.get('auth');
@@ -88,17 +86,10 @@ export class OAuthController {
               picture: result.data.avatar_url,
               name: result.data.login,
             });
-            const hostname = new URL(redirectUrl).hostname;
-            const userAccessOnHost = await this.hostService.getHostsOfUser(
-              user.email,
-              hostname,
+
+            const { idToken: access_token } = await this.authService.getIDToken(
+              user,
             );
-            const { accessToken: access_token } =
-              await this.authService.getIDToken(
-                user,
-                userAccessOnHost,
-                redirectUrl,
-              );
             return res.redirect(`${redirectUrl}?access_token=${access_token}`);
           });
       });

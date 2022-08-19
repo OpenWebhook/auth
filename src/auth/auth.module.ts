@@ -16,7 +16,6 @@ export const keyFileName = 'keys.json';
 @Module({
   imports: [
     UsersModule,
-    HostModule,
     PassportModule,
     ConfigModule,
     HttpModule,
