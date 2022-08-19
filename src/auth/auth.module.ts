@@ -9,7 +9,8 @@ import * as fs from 'fs';
 import * as jose from 'node-jose';
 import { OAuthController } from './oauth.controller';
 import { HttpModule } from '@nestjs/axios';
-import { HostModule } from '../host/host.module';
+import { WebhookStoreAuthController } from './webhook-store.auth.service';
+import { JwtStrategy } from './jwt.strategy';
 
 export const keyFileName = 'keys.json';
 
@@ -37,13 +38,14 @@ export const keyFileName = 'keys.json';
           signOptions: {
             algorithm: 'RS256',
             keyid: key.kid,
+            issuer: 'openwebhook',
           },
         };
       },
     }),
   ],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService],
-  controllers: [AuthController, OAuthController],
+  controllers: [AuthController, WebhookStoreAuthController, OAuthController],
 })
 export class AuthModule {}

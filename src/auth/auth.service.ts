@@ -9,26 +9,28 @@ export class AuthService {
   async getIDToken(user: User): Promise<{ idToken: string }> {
     const payload = {
       email: user.email,
-      sub: user.email,
       picture: user.picture,
       name: user.name,
     };
     return {
-      idToken: this.jwtService.sign(payload),
+      idToken: this.jwtService.sign(payload, {
+        subject: user.email,
+      }),
     };
   }
 
-  async getAcessToken(
-    user: User,
+  async getAccessToken(
     accessRights: { canRead: boolean },
     domain: string,
   ): Promise<{ accessToken: string }> {
     const payload = {
-      sub: user.email,
       accessRights,
     };
+
     return {
-      accessToken: this.jwtService.sign(payload, { audience: domain }),
+      accessToken: this.jwtService.sign(payload, {
+        audience: domain,
+      }),
     };
   }
 }
