@@ -6,11 +6,11 @@ import { User } from '@prisma/client';
 export class AuthService {
   constructor(private jwtService: JwtService) {}
 
-  async login(
+  async getIDToken(
     user: User,
     accessRights: { canRead: boolean },
     domain: string,
-  ): Promise<{ access_token: string }> {
+  ): Promise<{ accessToken: string }> {
     const payload = {
       email: user.email,
       sub: user.email,
@@ -19,7 +19,7 @@ export class AuthService {
       accessRights,
     };
     return {
-      access_token: this.jwtService.sign(payload, { audience: domain }),
+      accessToken: this.jwtService.sign(payload, { audience: domain }),
     };
   }
 }

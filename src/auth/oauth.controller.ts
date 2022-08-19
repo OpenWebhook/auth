@@ -93,11 +93,12 @@ export class OAuthController {
               user.email,
               hostname,
             );
-            const { access_token } = await this.authService.login(
-              user,
-              userAccessOnHost,
-              redirectUrl,
-            );
+            const { accessToken: access_token } =
+              await this.authService.getIDToken(
+                user,
+                userAccessOnHost,
+                redirectUrl,
+              );
             return res.redirect(`${redirectUrl}?access_token=${access_token}`);
           });
       });

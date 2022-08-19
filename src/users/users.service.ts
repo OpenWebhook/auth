@@ -19,15 +19,12 @@ export class UsersService {
   }): Promise<User> {
     const storedUser = await this.findOne(user.email);
     if (storedUser) {
-      // const userHosts = await this.prismaService.host.findMany({
-      //   where: { Users: { some: { userEmail: user.email } } },
-      // });
-      return { ...storedUser };
+      return storedUser;
     }
 
     const createdUser = await this.prismaService.user.create({
-      data: { ...user },
+      data: user,
     });
-    return { ...createdUser };
+    return createdUser;
   }
 }
