@@ -9,12 +9,14 @@ import * as fs from 'fs';
 import * as jose from 'node-jose';
 import { OAuthController } from './oauth.controller';
 import { HttpModule } from '@nestjs/axios';
+import { HostModule } from '../host/host.module';
 
 export const keyFileName = 'keys.json';
 
 @Module({
   imports: [
     UsersModule,
+    HostModule,
     PassportModule,
     ConfigModule,
     HttpModule,
