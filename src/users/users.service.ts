@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../infrastructure/prisma.service';
-import { Host, User } from '@prisma/client';
+import { User } from '@prisma/client';
 
 export type UserInput = { email: string; name: string; picture: string };
 
@@ -19,15 +19,12 @@ export class UsersService {
   }): Promise<User> {
     const storedUser = await this.findOne(user.email);
     if (storedUser) {
-      // const userHosts = await this.prismaService.host.findMany({
-      //   where: { Users: { some: { userEmail: user.email } } },
-      // });
-      return { ...storedUser };
+      return storedUser;
     }
 
     const createdUser = await this.prismaService.user.create({
-      data: { ...user },
+      data: user,
     });
-    return { ...createdUser };
+    return createdUser;
   }
 }

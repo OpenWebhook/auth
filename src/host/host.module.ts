@@ -6,6 +6,5 @@ import { HostService } from './host.service';
 @Module({
   controllers: [HostController],
   providers: [HostService, PrismaService],
-  exports: [HostService],
 })
 export class HostModule {}
