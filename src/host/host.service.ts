@@ -38,4 +38,17 @@ export class HostService {
       data: { userEmail, hostDomain: host.domain, assignedAt: new Date() },
     });
   }
+
+  async getHostsOfUser(
+    userEmail: User['email'],
+    domain: Host['domain'],
+  ): Promise<{ canRead: boolean }> {
+    const userHosts = await this.prismaService.host.findFirst({
+      where: { AND: [{ Users: { some: { userEmail } } }, { domain }] },
+    });
+    if (userHosts) {
+      return { canRead: true };
+    }
+    return { canRead: false };
+  }
 }
