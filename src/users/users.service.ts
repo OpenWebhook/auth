@@ -27,4 +27,8 @@ export class UsersService {
     });
     return createdUser;
   }
+
+  async countUsers(): Promise<number> {
+    return this.prismaService.user.count();
+  }
 }
