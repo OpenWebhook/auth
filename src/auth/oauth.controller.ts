@@ -82,7 +82,9 @@ export class OAuthController {
           })
           .subscribe(async (result) => {
             const user = await this.usersService.findOrCreateUser({
-              email: result.data.email,
+              email:
+                result.data.email ||
+                `${result.data.login}@github.nopublicemail`,
               picture: result.data.avatar_url,
               name: result.data.login,
             });
