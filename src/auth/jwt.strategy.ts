@@ -1,14 +1,12 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import * as jose from 'node-jose';
-import * as fs from 'fs';
-import { keyFileName } from './auth.module';
+import { JwkService } from './jwk.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   private publicKey: string;
-  constructor() {
+  constructor(private readonly jwkService: JwkService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -16,10 +14,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         if (this.publicKey) {
           return done(null, this.publicKey);
         }
-        const ks = fs.readFileSync(keyFileName);
-        const keyStore = await jose.JWK.asKeyStore(ks.toString());
-        const key = keyStore.toJSON().keys[0];
-        const publicKey = (await jose.JWK.asKey(key)).toPEM();
+        const publicKey = await this.jwkService.getPublicKey();
         this.publicKey = publicKey;
         return done(null, publicKey);
       },
