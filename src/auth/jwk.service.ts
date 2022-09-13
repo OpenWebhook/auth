@@ -8,19 +8,21 @@ export class JwkService {
   public async getKeyStore(): Promise<{ keys: PublicKey[] }> {
     try {
       const ks = await this.redisService.client.get(keyFileName);
+      const key = await jose.JWK.asKey(ks.toString());
 
-      const keyStore = await jose.JWK.asKeyStore(ks.toString());
-
+      const keyStore = jose.JWK.createKeyStore();
+      await keyStore.add(key);
       return keyStore.toJSON();
     } catch (e) {
+      console.error(e);
       return { keys: [] };
     }
   }
 
   public async getPublicKey(): Promise<any> {
     const ks = await this.redisService.client.get(keyFileName);
-    const keyStore = await jose.JWK.asKeyStore(ks.toString());
-    const key = keyStore.toJSON().keys[0];
+    const key = await jose.JWK.asKey(ks.toString());
+
     const publicKey = (await jose.JWK.asKey(key)).toPEM();
     return publicKey;
   }
@@ -34,7 +36,7 @@ export class JwkService {
 
     await this.redisService.client.set(
       keyFileName,
-      JSON.stringify(keyStore.toJSON(true)),
+      JSON.stringify(keyStore.toJSON().keys[0]),
     );
 
     const key = keyStore.toJSON(true).keys[0];
