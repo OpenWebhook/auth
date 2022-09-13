@@ -1,19 +1,14 @@
 import { Controller, Get, Res } from '@nestjs/common';
 import { Response } from 'express';
-import * as jose from 'node-jose';
-import * as fs from 'fs';
-import { keyFileName } from './auth.module';
-import { AuthService } from './auth.service';
+import { JwkService } from './jwk.service';
 
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly jwkService: JwkService) {}
+
   @Get('.well-known/jwks.json')
   async getJWKeys(@Res() res: Response) {
-    const ks = fs.readFileSync(keyFileName);
-
-    const keyStore = await jose.JWK.asKeyStore(ks.toString());
-
-    res.send(keyStore.toJSON());
+    const keyStore = await this.jwkService.getKeyStore();
+    res.send(keyStore);
   }
 }
