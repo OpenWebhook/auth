@@ -2,21 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { RedisService } from '../infrastructure/redis.service';
 import * as jose from 'node-jose';
 
-type Jwk = {
-  alg: string;
-  e: string;
-  kid: string;
-  kty: string;
-  n: string;
-  use: string;
-};
-
-export const keyFileName = 'keys.json';
-
 @Injectable()
 export class JwkService {
   constructor(private readonly redisService: RedisService) {}
-  public async getKeyStore(): Promise<{ keys: Jwk[] }> {
+  public async getKeyStore(): Promise<{ keys: PublicKey[] }> {
     try {
       const ks = await this.redisService.client.get(keyFileName);
 
@@ -36,7 +25,10 @@ export class JwkService {
     return publicKey;
   }
 
-  public async createAndStoreKey(): Promise<{ key: Jwk; privateKey: any }> {
+  public async createAndStoreKey(): Promise<{
+    key: PrivateJwk;
+    privateKey: string;
+  }> {
     const keyStore = jose.JWK.createKeyStore();
     await keyStore.generate('RSA', 2048, { alg: 'RS256', use: 'sig' });
 
@@ -50,3 +42,32 @@ export class JwkService {
     return { key, privateKey };
   }
 }
+
+type Jwk = {
+  alg: string;
+  e: string;
+  kid: string;
+  kty: string;
+  n: string;
+  use: string;
+};
+
+type PublicKey = Jwk & {
+  d: undefined;
+  p: undefined;
+  q: undefined;
+  dp: undefined;
+  dq: undefined;
+  qi: undefined;
+};
+
+type PrivateJwk = Jwk & {
+  d: string;
+  p: string;
+  q: string;
+  dp: string;
+  dq: string;
+  qi: string;
+};
+
+export const keyFileName = 'keys.json';
