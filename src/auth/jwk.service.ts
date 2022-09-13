@@ -36,7 +36,7 @@ export class JwkService {
     const keyStore = jose.JWK.createKeyStore();
     await keyStore.generate('RSA', 2048, { alg: 'RS256', use: 'sig' });
 
-    this.redisService.client.set(
+    await this.redisService.client.set(
       keyFileName,
       JSON.stringify(keyStore.toJSON(true)),
     );
