@@ -6,21 +6,22 @@ import * as jose from 'node-jose';
 export class JwkService {
   constructor(private readonly redisService: RedisService) {}
   public async getKeyStore(): Promise<{ keys: PublicKey[] }> {
-    try {
-      const ks = await this.redisService.client.get(keyFileName);
+    const keyStore = jose.JWK.createKeyStore();
+    const allKeysIterator = this.redisService.client.scanIterator({
+      MATCH: `${keyFileName}*`,
+    });
+
+    for await (const redisKey of allKeysIterator) {
+      const ks = await this.redisService.client.get(redisKey);
       const key = await jose.JWK.asKey(ks.toString());
 
-      const keyStore = jose.JWK.createKeyStore();
       await keyStore.add(key);
-      return keyStore.toJSON();
-    } catch (e) {
-      console.error(e);
-      return { keys: [] };
     }
+    return keyStore.toJSON();
   }
 
   public async getPublicKey(): Promise<any> {
-    const ks = await this.redisService.client.get(keyFileName);
+    const ks = await this.redisService.client.get(currentKey);
     const key = await jose.JWK.asKey(ks.toString());
 
     const publicKey = (await jose.JWK.asKey(key)).toPEM();
@@ -33,11 +34,14 @@ export class JwkService {
   }> {
     const keyStore = jose.JWK.createKeyStore();
     await keyStore.generate('RSA', 2048, { alg: 'RS256', use: 'sig' });
+    const publicKey = keyStore.toJSON().keys[0];
+    const stringifiedKey = JSON.stringify(publicKey);
 
     await this.redisService.client.set(
-      keyFileName,
-      JSON.stringify(keyStore.toJSON().keys[0]),
+      `${keyFileName}/${publicKey.kid}`,
+      stringifiedKey,
     );
+    await this.redisService.client.set(currentKey, stringifiedKey);
 
     const key = keyStore.toJSON(true).keys[0];
     const privateKey = (await jose.JWK.asKey(key)).toPEM(true);
@@ -72,4 +76,5 @@ type PrivateJwk = Jwk & {
   qi: string;
 };
 
-export const keyFileName = 'keys.json';
+export const keyFileName = 'JWK';
+const currentKey = 'currentJWK';

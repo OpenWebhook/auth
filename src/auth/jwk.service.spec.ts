@@ -70,4 +70,13 @@ describe('JwkService', () => {
     expect(publicKey).toMatch(/^-----BEGIN PUBLIC KEY-----/);
     expect(publicKey).toMatch(/-----END PUBLIC KEY-----/);
   });
+
+  it('should keep all the keys', async () => {
+    const keyStore = await jwkService.getKeyStore();
+    expect(keyStore.keys).toHaveLength(0);
+    await jwkService.createAndStoreKey();
+    await jwkService.createAndStoreKey();
+    const newKeyStore = await jwkService.getKeyStore();
+    expect(newKeyStore.keys).toHaveLength(2);
+  });
 });
