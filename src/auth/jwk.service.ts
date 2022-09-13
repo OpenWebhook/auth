@@ -17,11 +17,15 @@ export const keyFileName = 'keys.json';
 export class JwkService {
   constructor(private readonly redisService: RedisService) {}
   public async getKeyStore(): Promise<{ keys: Jwk[] }> {
-    const ks = await this.redisService.client.get(keyFileName);
+    try {
+      const ks = await this.redisService.client.get(keyFileName);
 
-    const keyStore = await jose.JWK.asKeyStore(ks.toString());
+      const keyStore = await jose.JWK.asKeyStore(ks.toString());
 
-    return keyStore.toJSON();
+      return keyStore.toJSON();
+    } catch (e) {
+      return { keys: [] };
+    }
   }
 
   public async getPublicKey(): Promise<any> {

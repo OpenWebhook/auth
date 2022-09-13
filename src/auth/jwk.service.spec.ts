@@ -17,12 +17,19 @@ describe('JwkService', () => {
     redisService = moduleRef.get<RedisService>(RedisService);
   });
 
+  beforeEach(async () => {
+    await redisService.client.flushDb();
+  });
+
   afterAll(async () => {
     await redisService.client.disconnect();
   });
 
   it('should be defined', async () => {
+    const keyStore = await jwkService.getKeyStore();
+    expect(keyStore.keys).toHaveLength(0);
     await jwkService.createAndStoreKey();
-    expect(jwkService).toBeDefined();
+    const newKeyStore = await jwkService.getKeyStore();
+    expect(newKeyStore.keys).toHaveLength(1);
   });
 });
