@@ -18,6 +18,9 @@ import { RedisService } from './redis.service';
         };
         const client = createClient(options);
         await client.connect();
+        client.on('error', (err) => {
+          console.error('Error ' + err);
+        });
         return { client };
       },
     },
