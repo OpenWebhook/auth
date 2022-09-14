@@ -17,10 +17,10 @@ import { RedisService } from './redis.service';
           database: redisConfig.redisDatabase,
         };
         const client = createClient(options);
-        await client.connect();
         client.on('error', (err) => {
           console.error('Error ' + err);
         });
+        await client.connect();
         return { client };
       },
     },
