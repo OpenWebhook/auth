@@ -15,21 +15,6 @@ import { AuthService } from './auth.service';
 export class WebhookStoreAuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('public-store-token')
-  async getPublicStoreAccessToken(
-    @Body() { webhookStoreUrl }: { webhookStoreUrl: string },
-    @Res() res: Response,
-  ) {
-    if (!webhookStoreUrl.endsWith('.webhook.store')) {
-      throw new ForbiddenException('This webhook store is not public');
-    }
-    const token = await this.authService.getAccessToken(
-      { canRead: true },
-      webhookStoreUrl,
-    );
-    res.send(token);
-  }
-
   @Post('private-store-token')
   @UseGuards(AuthGuard('jwt'))
   async getPrivateStoreAccessToken(
