@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  NotAcceptableException,
   Post,
   Req,
   Res,
@@ -18,10 +19,13 @@ export class WebhookStoreAuthController {
   @Post('access-token')
   @UseGuards(AuthGuard('jwt'))
   async getPrivateStoreAccessToken(
-    @Body() { webhookStoreUrl }: { webhookStoreUrl: string },
+    @Body() { webhookStoreUrl }: { webhookStoreUrl?: string },
     @Req() req: any,
     @Res() res: Response,
   ) {
+    if (!webhookStoreUrl) {
+      throw new NotAcceptableException('Webhook store URL is required');
+    }
     if (!webhookStoreUrl.endsWith('.webhook.store')) {
       throw new ForbiddenException('This webhook store is not public');
     }
