@@ -15,7 +15,7 @@ import { AuthService } from './auth.service';
 export class WebhookStoreAuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('private-store-token')
+  @Post('access-token')
   @UseGuards(AuthGuard('jwt'))
   async getPrivateStoreAccessToken(
     @Body() { webhookStoreUrl }: { webhookStoreUrl: string },
