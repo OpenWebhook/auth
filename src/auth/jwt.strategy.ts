@@ -2,6 +2,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { JwkService } from './jwk.service';
+import * as jwksRsa from 'jwks-rsa';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -10,14 +11,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKeyProvider: async (_request, _jwt, done) => {
-        if (this.publicKey) {
-          return done(null, this.publicKey);
-        }
-        const publicKey = await this.jwkService.getPublicKey();
-        this.publicKey = publicKey;
-        return done(null, publicKey);
-      },
+      secretOrKeyProvider: jwksRsa.passportJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 5,
+        jwksUri: `https://openwebhook-auth.herokuapp.com/.well-known/jwks.json`,
+        getKeysInterceptor: async () => {
+          const keys = await this.jwkService.getKeyStore();
+          return keys.keys;
+        },
+      }),
     });
   }
 
