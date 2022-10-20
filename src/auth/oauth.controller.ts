@@ -81,17 +81,27 @@ export class OAuthController {
             },
           })
           .subscribe(async (result) => {
+            const githubUsername = result.data.login;
             const user = await this.usersService.findOrCreateUser({
               email:
                 result.data.email ||
                 `${result.data.login}@github.nopublicemail`,
               picture: result.data.avatar_url,
-              name: result.data.login,
+              name: githubUsername,
             });
 
             const { idToken: access_token } = await this.authService.getIDToken(
               user,
             );
+            const hostname = new URL(redirectUrl).hostname;
+            const redirectToUserGithubStore =
+              hostname === 'github.webhook.store';
+
+            if (redirectToUserGithubStore) {
+              return res.redirect(
+                `https://${githubUsername}.github.webhook.store/?access_token=${access_token}`,
+              );
+            }
             return res.redirect(`${redirectUrl}?access_token=${access_token}`);
           });
       });
