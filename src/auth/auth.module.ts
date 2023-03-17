@@ -11,6 +11,7 @@ import { WebhookStoreAuthController } from './webhook-store.auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { JwkService } from './jwk.service';
 import { JwkModule } from './jwk.module';
+import { AdminStrategy } from './admin.strategy';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import { JwkModule } from './jwk.module';
       },
     }),
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, AdminStrategy],
   exports: [AuthService],
   controllers: [AuthController, WebhookStoreAuthController, OAuthController],
 })
