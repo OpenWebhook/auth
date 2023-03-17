@@ -31,4 +31,8 @@ export class UsersService {
   async countUsers(): Promise<number> {
     return this.prismaService.user.count();
   }
+
+  async findMany(): Promise<User[]> {
+    return this.prismaService.user.findMany();
+  }
 }
