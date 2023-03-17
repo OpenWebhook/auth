@@ -37,7 +37,7 @@ export class WebhookStoreAuthController {
     }
     if (webhookStoreUrl.endsWith('.github-org.webhook.store')) {
       const githubOrgaName =
-        webhookStoreUrl.split('.')[webhookStoreUrl.length - 3];
+        webhookStoreUrl.split('.')[webhookStoreUrl.split('.').length - 4];
       const userHasAccessToOrganisation = req.user.ghOrganisations.find(
         (userOrgaName: string) =>
           userOrgaName.toLocaleLowerCase() ===
