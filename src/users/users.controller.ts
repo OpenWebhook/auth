@@ -8,6 +8,6 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
   @Get('')
   getNumberOfUser() {
-    return this.usersService.countUsers();
+    return this.usersService.findMany();
   }
 }
