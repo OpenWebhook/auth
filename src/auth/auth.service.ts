@@ -6,11 +6,15 @@ import { User } from '@prisma/client';
 export class AuthService {
   constructor(private jwtService: JwtService) {}
 
-  async getIDToken(user: User): Promise<{ idToken: string }> {
+  async getIDToken(
+    user: User,
+    ghOrganisations: string[],
+  ): Promise<{ idToken: string }> {
     const payload = {
       email: user.email,
       picture: user.picture,
       name: user.name,
+      ghOrganisations,
     };
     return {
       idToken: this.jwtService.sign(payload, {

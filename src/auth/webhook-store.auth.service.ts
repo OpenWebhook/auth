@@ -35,6 +35,19 @@ export class WebhookStoreAuthController {
         throw new ForbiddenException('This webhook store is not public');
       }
     }
+    if (webhookStoreUrl.endsWith('.github-org.webhook.store')) {
+      const githubOrgaName =
+        webhookStoreUrl.split('.')[webhookStoreUrl.length - 3];
+      const userHasAccessToOrganisation = req.user.ghOrganisations.find(
+        (userOrgaName: string) =>
+          userOrgaName.toLocaleLowerCase() ===
+          githubOrgaName.toLocaleLowerCase(),
+      );
+
+      if (!userHasAccessToOrganisation) {
+        throw new ForbiddenException('This webhook store is not public');
+      }
+    }
     const token = await this.authService.getAccessToken(
       { canRead: true },
       webhookStoreUrl,

@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService, ConfigType } from '@nestjs/config';
 import { Response } from 'express';
+import { firstValueFrom } from 'rxjs';
 import { UsersService } from 'src/users/users.service';
 import { isValidHttpUrl } from 'src/utils/is-valid-url';
 import authConfig from '../config/auth.config';
@@ -90,8 +91,21 @@ export class OAuthController {
               name: githubUsername,
             });
 
+            const githubOrganisations = await firstValueFrom(
+              this.httpService.get(
+                `https://api.github.com/users/${githubUsername}/orgs`,
+              ),
+            );
+
+            const githubOrganisationNames = githubOrganisations.data.map(
+              (organisation) => {
+                return organisation.login;
+              },
+            );
+
             const { idToken: access_token } = await this.authService.getIDToken(
               user,
+              githubOrganisationNames,
             );
             const hostname = new URL(redirectUrl).hostname;
             const redirectToUserGithubStore =
