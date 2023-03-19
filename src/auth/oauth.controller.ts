@@ -53,8 +53,8 @@ export class OAuthController {
     if (!isValidHttpUrl(redirectUrl)) {
       return next(new ForbiddenException('Invalid state'));
     }
-    this.httpService
-      .post<{
+    const accessTokenResponse = await firstValueFrom(
+      this.httpService.post<{
         access_token: string;
         token_type: string;
         scope: string;
@@ -70,54 +70,52 @@ export class OAuthController {
             Accept: 'application/json',
           },
         },
-      )
-      .subscribe((accessTokenResponse) => {
-        const githubAccessToken = accessTokenResponse.data.access_token;
+      ),
+    );
+    const githubAccessToken = accessTokenResponse.data.access_token;
 
-        // @TODO: Those observable should not be nested
-        this.httpService
-          .get('https://api.github.com/user', {
-            headers: {
-              Authorization: `token ${githubAccessToken}`,
-            },
-          })
-          .subscribe(async (userResponse) => {
-            const githubUsername = userResponse.data.login;
-            const user = await this.usersService.findOrCreateUser({
-              email:
-                userResponse.data.email ||
-                `${userResponse.data.login}@github.nopublicemail`,
-              picture: userResponse.data.avatar_url,
-              name: githubUsername,
-            });
+    // @TODO: Those observable should not be nested
+    this.httpService
+      .get('https://api.github.com/user', {
+        headers: {
+          Authorization: `token ${githubAccessToken}`,
+        },
+      })
+      .subscribe(async (userResponse) => {
+        const githubUsername = userResponse.data.login;
+        const user = await this.usersService.findOrCreateUser({
+          email:
+            userResponse.data.email ||
+            `${userResponse.data.login}@github.nopublicemail`,
+          picture: userResponse.data.avatar_url,
+          name: githubUsername,
+        });
 
-            const githubOrganisations = await firstValueFrom(
-              this.httpService.get(
-                `https://api.github.com/users/${githubUsername}/orgs`,
-              ),
-            );
+        const githubOrganisations = await firstValueFrom(
+          this.httpService.get(
+            `https://api.github.com/users/${githubUsername}/orgs`,
+          ),
+        );
 
-            const githubOrganisationNames = githubOrganisations.data.map(
-              (organisation) => {
-                return organisation.login;
-              },
-            );
+        const githubOrganisationNames = githubOrganisations.data.map(
+          (organisation) => {
+            return organisation.login;
+          },
+        );
 
-            const { idToken: access_token } = await this.authService.getIDToken(
-              user,
-              githubOrganisationNames,
-            );
-            const hostname = new URL(redirectUrl).hostname;
-            const redirectToUserGithubStore =
-              hostname === 'github.webhook.store';
+        const { idToken: access_token } = await this.authService.getIDToken(
+          user,
+          githubOrganisationNames,
+        );
+        const hostname = new URL(redirectUrl).hostname;
+        const redirectToUserGithubStore = hostname === 'github.webhook.store';
 
-            if (redirectToUserGithubStore) {
-              return res.redirect(
-                `https://${githubUsername}.github.webhook.store/?access_token=${access_token}`,
-              );
-            }
-            return res.redirect(`${redirectUrl}?access_token=${access_token}`);
-          });
+        if (redirectToUserGithubStore) {
+          return res.redirect(
+            `https://${githubUsername}.github.webhook.store/?access_token=${access_token}`,
+          );
+        }
+        return res.redirect(`${redirectUrl}?access_token=${access_token}`);
       });
   }
 }
