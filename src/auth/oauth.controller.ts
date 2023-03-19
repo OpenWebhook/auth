@@ -81,13 +81,13 @@ export class OAuthController {
               Authorization: `token ${githubAccessToken}`,
             },
           })
-          .subscribe(async (result) => {
-            const githubUsername = result.data.login;
+          .subscribe(async (userResponse) => {
+            const githubUsername = userResponse.data.login;
             const user = await this.usersService.findOrCreateUser({
               email:
-                result.data.email ||
-                `${result.data.login}@github.nopublicemail`,
-              picture: result.data.avatar_url,
+                userResponse.data.email ||
+                `${userResponse.data.login}@github.nopublicemail`,
+              picture: userResponse.data.avatar_url,
               name: githubUsername,
             });
 
