@@ -71,8 +71,8 @@ export class OAuthController {
           },
         },
       )
-      .subscribe((result) => {
-        const githubAccessToken = result.data.access_token;
+      .subscribe((accessTokenResponse) => {
+        const githubAccessToken = accessTokenResponse.data.access_token;
 
         // @TODO: Those observable should not be nested
         this.httpService
