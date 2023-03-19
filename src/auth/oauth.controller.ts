@@ -53,67 +53,72 @@ export class OAuthController {
     if (!isValidHttpUrl(redirectUrl)) {
       return next(new ForbiddenException('Invalid state'));
     }
-    const accessTokenResponse = await firstValueFrom(
-      this.httpService.post<{
-        access_token: string;
-        token_type: string;
-        scope: string;
-      }>(
-        'https://github.com/login/oauth/access_token',
-        {
-          client_id: this.authConfig.githubOauth.clientId,
-          client_secret: this.authConfig.githubOauth.clientSecret,
-          code,
-        },
-        {
-          headers: {
-            Accept: 'application/json',
+    try {
+      const accessTokenResponse = await firstValueFrom(
+        this.httpService.post<{
+          access_token: string;
+          token_type: string;
+          scope: string;
+        }>(
+          'https://github.com/login/oauth/access_token',
+          {
+            client_id: this.authConfig.githubOauth.clientId,
+            client_secret: this.authConfig.githubOauth.clientSecret,
+            code,
           },
-        },
-      ),
-    );
-    const githubAccessToken = accessTokenResponse.data.access_token;
-
-    const userResponse = await firstValueFrom(
-      this.httpService.get('https://api.github.com/user', {
-        headers: {
-          Authorization: `token ${githubAccessToken}`,
-        },
-      }),
-    );
-    const githubUsername = userResponse.data.login;
-    const user = await this.usersService.findOrCreateUser({
-      email:
-        userResponse.data.email ||
-        `${userResponse.data.login}@github.nopublicemail`,
-      picture: userResponse.data.avatar_url,
-      name: githubUsername,
-    });
-
-    const githubOrganisations = await firstValueFrom(
-      this.httpService.get(
-        `https://api.github.com/users/${githubUsername}/orgs`,
-      ),
-    );
-
-    const githubOrganisationNames = githubOrganisations.data.map(
-      (organisation) => {
-        return organisation.login;
-      },
-    );
-
-    const { idToken: access_token } = await this.authService.getIDToken(
-      user,
-      githubOrganisationNames,
-    );
-    const hostname = new URL(redirectUrl).hostname;
-    const redirectToUserGithubStore = hostname === 'github.webhook.store';
-
-    if (redirectToUserGithubStore) {
-      return res.redirect(
-        `https://${githubUsername}.github.webhook.store/?access_token=${access_token}`,
+          {
+            headers: {
+              Accept: 'application/json',
+            },
+          },
+        ),
       );
+      const githubAccessToken = accessTokenResponse.data.access_token;
+
+      const userResponse = await firstValueFrom(
+        this.httpService.get('https://api.github.com/user', {
+          headers: {
+            Authorization: `token ${githubAccessToken}`,
+          },
+        }),
+      );
+      const githubUsername = userResponse.data.login;
+      const user = await this.usersService.findOrCreateUser({
+        email:
+          userResponse.data.email ||
+          `${userResponse.data.login}@github.nopublicemail`,
+        picture: userResponse.data.avatar_url,
+        name: githubUsername,
+      });
+
+      const githubOrganisations = await firstValueFrom(
+        this.httpService.get(
+          `https://api.github.com/users/${githubUsername}/orgs`,
+        ),
+      );
+
+      const githubOrganisationNames = githubOrganisations.data.map(
+        (organisation) => {
+          return organisation.login;
+        },
+      );
+
+      const { idToken: access_token } = await this.authService.getIDToken(
+        user,
+        githubOrganisationNames,
+      );
+      const hostname = new URL(redirectUrl).hostname;
+      const redirectToUserGithubStore = hostname === 'github.webhook.store';
+
+      if (redirectToUserGithubStore) {
+        return res.redirect(
+          `https://${githubUsername}.github.webhook.store/?access_token=${access_token}`,
+        );
+      }
+      return res.redirect(`${redirectUrl}?access_token=${access_token}`);
+    } catch (error: any) {
+      console.error(error);
+      return next(new Error(error));
     }
-    return res.redirect(`${redirectUrl}?access_token=${access_token}`);
   }
 }
