@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  Next,
   NotAcceptableException,
   Post,
   Req,
@@ -22,36 +23,41 @@ export class WebhookStoreAuthController {
     @Body() { webhookStoreUrl }: { webhookStoreUrl?: string },
     @Req() req: any,
     @Res() res: Response,
+    @Next() next: any,
   ) {
-    if (!webhookStoreUrl) {
-      throw new NotAcceptableException('Webhook store URL is required');
-    }
-    if (!webhookStoreUrl.endsWith('.webhook.store')) {
-      throw new ForbiddenException('This webhook store is not public');
-    }
-    if (webhookStoreUrl.endsWith('.github.webhook.store')) {
-      const userPersonnalGithubStoreUrl = `${req.user.name.toLocaleLowerCase()}.github.webhook.store`;
-      if (userPersonnalGithubStoreUrl !== webhookStoreUrl) {
+    try {
+      if (!webhookStoreUrl) {
+        throw new NotAcceptableException('Webhook store URL is required');
+      }
+      if (!webhookStoreUrl.endsWith('.webhook.store')) {
         throw new ForbiddenException('This webhook store is not public');
       }
-    }
-    if (webhookStoreUrl.endsWith('.github-org.webhook.store')) {
-      const githubOrgaName =
-        webhookStoreUrl.split('.')[webhookStoreUrl.split('.').length - 4];
-      const userHasAccessToOrganisation = req.user.ghOrganisations.find(
-        (userOrgaName: string) =>
-          userOrgaName.toLocaleLowerCase() ===
-          githubOrgaName.toLocaleLowerCase(),
-      );
+      if (webhookStoreUrl.endsWith('.github.webhook.store')) {
+        const userPersonnalGithubStoreUrl = `${req.user.name.toLocaleLowerCase()}.github.webhook.store`;
+        if (userPersonnalGithubStoreUrl !== webhookStoreUrl) {
+          throw new ForbiddenException('This webhook store is not public');
+        }
+      }
+      if (webhookStoreUrl.endsWith('.github-org.webhook.store')) {
+        const githubOrgaName =
+          webhookStoreUrl.split('.')[webhookStoreUrl.split('.').length - 4];
+        const userHasAccessToOrganisation = req.user.ghOrganisations.find(
+          (userOrgaName: string) =>
+            userOrgaName.toLocaleLowerCase() ===
+            githubOrgaName.toLocaleLowerCase(),
+        );
 
-      if (!userHasAccessToOrganisation) {
-        throw new ForbiddenException('This webhook store is not public');
+        if (!userHasAccessToOrganisation) {
+          throw new ForbiddenException('This webhook store is not public');
+        }
       }
+      const token = await this.authService.getAccessToken(
+        { canRead: true },
+        webhookStoreUrl,
+      );
+      res.send(token);
+    } catch (e) {
+      next(e);
     }
-    const token = await this.authService.getAccessToken(
-      { canRead: true },
-      webhookStoreUrl,
-    );
-    res.send(token);
   }
 }
