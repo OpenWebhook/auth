@@ -1,3 +1,4 @@
+import { HttpService } from '@nestjs/axios';
 import {
   Body,
   Controller,
@@ -11,11 +12,15 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 
 @Controller('webhook-store-auth')
 export class WebhookStoreAuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly httpService: HttpService,
+  ) {}
 
   @Post('access-token')
   @UseGuards(AuthGuard('jwt'))
@@ -30,7 +35,21 @@ export class WebhookStoreAuthController {
         throw new NotAcceptableException('Webhook store URL is required');
       }
       if (!webhookStoreUrl.endsWith('.webhook.store')) {
-        throw new ForbiddenException('This webhook store is not public');
+        const webhookStoreAuthMetadata = await firstValueFrom(
+          this.httpService.get(`http://${webhookStoreUrl}/auth-metadata`),
+        );
+        const githubOrgaName = webhookStoreAuthMetadata.data.ghOrg;
+        if (!githubOrgaName) {
+          throw new ForbiddenException('This webhook store is not public');
+        }
+        const userHasAccessToOrganisation = req.user.ghOrganisations.find(
+          (userOrgaName: string) =>
+            userOrgaName.toLocaleLowerCase() ===
+            githubOrgaName.toLocaleLowerCase(),
+        );
+        if (!userHasAccessToOrganisation) {
+          throw new ForbiddenException('This webhook store is not public');
+        }
       }
       if (webhookStoreUrl.endsWith('.github.webhook.store')) {
         const githubUserName =
