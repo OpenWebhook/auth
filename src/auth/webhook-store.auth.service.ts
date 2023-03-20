@@ -33,8 +33,9 @@ export class WebhookStoreAuthController {
         throw new ForbiddenException('This webhook store is not public');
       }
       if (webhookStoreUrl.endsWith('.github.webhook.store')) {
-        const userPersonnalGithubStoreUrl = `${req.user.name.toLocaleLowerCase()}.github.webhook.store`;
-        if (userPersonnalGithubStoreUrl !== webhookStoreUrl) {
+        const githubUserName =
+          webhookStoreUrl.split('.')[webhookStoreUrl.split('.').length - 4];
+        if (req.user.name.toLocaleLowerCase() !== githubUserName) {
           throw new ForbiddenException('This webhook store is not public');
         }
       }
