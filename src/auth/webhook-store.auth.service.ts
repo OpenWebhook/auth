@@ -36,7 +36,7 @@ export class WebhookStoreAuthController {
       }
       if (!webhookStoreUrl.endsWith('.webhook.store')) {
         const webhookStoreAuthMetadata = await firstValueFrom(
-          this.httpService.get(`http://${webhookStoreUrl}/auth-metadata`),
+          this.httpService.get(`https://${webhookStoreUrl}/auth-metadata`),
         );
         const githubOrgaName = webhookStoreAuthMetadata.data.ghOrg;
         if (!githubOrgaName) {
