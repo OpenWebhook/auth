@@ -32,7 +32,7 @@ export class OAuthController {
   @Get('login')
   login(@Res() res: Response, @Headers('referer') referer: string) {
     const state = encodeURIComponent(referer);
-    const url = `https://github.com/login/oauth/authorize?scope=user:email&client_id=${this.authConfig.githubOauth.clientId}&state=${state}`;
+    const url = `https://github.com/login/oauth/authorize?scope=read:org&client_id=${this.authConfig.githubOauth.clientId}&state=${state}`;
     return res.redirect(url);
   }
 
@@ -65,6 +65,7 @@ export class OAuthController {
             client_id: this.authConfig.githubOauth.clientId,
             client_secret: this.authConfig.githubOauth.clientSecret,
             code,
+            scope: 'read:org',
           },
           {
             headers: {
@@ -92,9 +93,11 @@ export class OAuthController {
       });
 
       const githubOrganisations = await firstValueFrom(
-        this.httpService.get(
-          `https://api.github.com/users/${githubUsername}/orgs`,
-        ),
+        this.httpService.get('https://api.github.com/user/orgs', {
+          headers: {
+            Authorization: `token ${githubAccessToken}`,
+          },
+        }),
       );
 
       const githubOrganisationNames = githubOrganisations.data.map(
